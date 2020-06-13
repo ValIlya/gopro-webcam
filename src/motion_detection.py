@@ -1,15 +1,15 @@
+from typing import Iterable, Dict
+
 import cv2
 import imutils
 import numpy as np
 
 
 class MotionDetector:
-    MAX_FRAMES = 5
-    GAUSS_KERNEL_SIZE = 21
-    FRAME_WIDTH = 500
-    DELTA_THRESHOLD = 20
-
-    MIN_AREA = 200
+    MAX_FRAMES = 5  # averaging n last frames to get stable reference
+    GAUSS_KERNEL_SIZE = 21  # blurring
+    DELTA_THRESHOLD = 20  # seeking pixels with changed brightness more than DELTA_THRESHOLD
+    MIN_AREA = 200  # clusters with area more than MIN_AREA are considered
 
     def __init__(self):
         self.stream = None
@@ -55,31 +55,15 @@ class MotionDetector:
             cv2.drawContours(frame, contour, -1, (0, 0, 255), 3)
         return frame
 
-    def start(self, stream_path: str, show=False, draw=True):
-        self.stream = cv2.VideoCapture(stream_path)
-        assert self.stream.isOpened()
-        while True:
-            ret, frame = self.stream.read()
-            if not ret:
-                break
+    def start(self, stream: Iterable[np.ndarray]) -> Iterable[Dict[str, np.ndarray]]:
 
-            frame = imutils.resize(frame, width=self.FRAME_WIDTH)
+        for stream_info in stream:
+            frame = stream_info['frame'].copy()
             contours = self.get_motion_contours(frame)
-            if contours:
-                yield True
-            else:
-                yield False
+            frame = self.draw_contours(frame, contours)
 
-            if show:
-                if draw:
-                    frame = self.draw_contours(frame, contours)
-                cv2.imshow("GoPro OpenCV", frame)
-
-            # if the `q` key is pressed, break from the lop
-            if (cv2.waitKey(1) & 0xFF) == ord("q"):
-                break
-
-        self.stream.release()
-        cv2.destroyAllWindows()
-
-
+            yield {
+                **stream_info,
+                'contours': contours,
+                'frame_with_contours': frame,
+            }
