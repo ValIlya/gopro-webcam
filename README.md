@@ -1,7 +1,7 @@
 # gopro-webcam
 Turn gopro into webcam
 
-Only GpPro3 support for now
+Only GoPro3 support for now
 
 ### Installation
 Python3.6+
