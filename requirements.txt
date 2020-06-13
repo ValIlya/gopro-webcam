@@ -1,0 +1,5 @@
+# goprocam==4.0.3
+numpy==1.18.5
+opencv-python==4.2.0.34
+requests
+imutils==0.5.3
